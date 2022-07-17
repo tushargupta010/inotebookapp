@@ -49,4 +49,42 @@ router.post(
   }
 );
 
+// Route 3 : Updating an existing Notes details using PUT "/api/notes/updatenote". Login required
+router.put("/updatenote/:id", fetchUser, async (req, res) => {
+  try {
+    const { title, description, tag } = req.body;
+
+    // create a newNote object
+    const newNote = {};
+    if (title) {
+      newNote.title = title;
+    }
+    if (description) {
+      newNote.description = description;
+    }
+    if (tag) {
+      newNote.tag = tag;
+    }
+
+    // find a note to be updated
+    const note = await Notes.findById(req.params.id);
+    if (!note) {
+      return res.status(404).send("Not Found");
+    }
+    if (note.user.toString() !== req.user.id) {
+      return res.status(401).send("Not Allowed");
+    }
+
+    const updatedNote = await Notes.findByIdAndUpdate(
+      req.params.id,
+      { $set: newNote },
+      { new: true }
+    );
+    res.json(updatedNote);
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).send("Internal server error.");
+  }
+});
+
 module.exports = router;
