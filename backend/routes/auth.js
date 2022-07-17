@@ -3,6 +3,9 @@ const router = express.Router();
 const User = require("../models/User");
 const { body, validationResult } = require("express-validator");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+
+const JWT_SECRET = "TusharGoodbuoy";
 
 // Create a user using POST "/api/auth/createUser". No login required
 router.post(
@@ -11,7 +14,7 @@ router.post(
   [
     body("name", "Enter valid name").isLength({ min: 3 }),
     body("email", "Enter valid email").isEmail(),
-    body("password").isLength({ min: 3 }),
+    body("password").isLength({ min: 5 }),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -37,16 +40,16 @@ router.post(
         email: req.body.email,
         password: secPassword,
       });
-      // .then((user) => res.json(user))
-      // .catch((err) => {
-      //   console.log(err);
-      //   res.json({
-      //     error: "Please enter a unique value for email",
-      //     message: err.message,
-      //   });
-      // });
 
-      res.json(user);
+      // implementing jwt token
+      const data = {
+        user: {
+          id: user.id,
+        },
+      };
+      const authToken = jwt.sign(data, JWT_SECRET);
+
+      res.json({ authToken });
     } catch (error) {
       console.log(error.message);
       res.status(500).send("Some error occured.");
